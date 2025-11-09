@@ -1,0 +1,532 @@
+const { useState, useMemo } = React;
+
+function B2BWebsite(){
+  const [role, setRole] = useState("guest");
+  const [mode, setMode] = useState("public");
+
+  return (
+    <div className="min-h-screen bg-white text-neutral-900">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-neutral-200">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-neutral-900 text-white grid place-items-center text-xs font-bold">B2B</div>
+            <span className="font-semibold tracking-tight text-sm md:text-base">Business 2 Business - Setup, Readiness, Support</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={()=>setMode("public")} className={`text-xs md:text-sm px-3 py-1.5 rounded-lg border ${mode==='public'?'bg-neutral-900 text-white':'bg-white'}`}>Public</button>
+            <button onClick={()=>setMode("member")} className={`text-xs md:text-sm px-3 py-1.5 rounded-lg border ${mode==='member'?'bg-neutral-900 text-white':'bg-white'}`}>Member</button>
+            <button onClick={()=>setMode("staff")} className={`text-xs md:text-sm px-3 py-1.5 rounded-lg border ${mode==='staff'?'bg-neutral-900 text-white':'bg-white'}`}>Staff</button>
+            {role === "guest" ? (
+              <AuthButton onClick={()=>setMode("member")} />
+            ) : (
+              <button onClick={()=>{ setRole("guest"); setMode("public"); }} className="text-xs md:text-sm px-3 py-1.5 rounded-lg border">Sign out</button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {mode === "public" && <PublicPreview />}
+      {mode === "member" && (role === "member" || role === "staff" ? <MemberPreview/> : <Login setRole={setRole} target="member"/>) }
+      {mode === "staff" && (role === "staff" ? <StaffPanel/> : <Login setRole={setRole} target="staff"/>) }
+
+      <footer className="py-10 border-t mt-12">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 text-sm text-neutral-600">
+          <p>&copy; {new Date().getFullYear()} Business 2 Business Network. We are not a lender. We provide setup, documentation, and readiness services. Financing decisions belong to lenders.</p>
+          <p className="mt-2">
+            <a className="underline" href="./terms.html">Terms</a> · <a className="underline" href="./privacy.html">Privacy</a>
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function AuthButton({onClick}){
+  return (
+    <button onClick={onClick} className="text-xs md:text-sm px-3 py-1.5 rounded-lg bg-neutral-900 text-white">Sign in</button>
+  );
+}
+
+function Login({ setRole, target }){
+  const [email, setEmail] = React.useState("");
+  const [pass, setPass] = React.useState("");
+  const [err, setErr] = React.useState("");
+
+  function submit(e){
+    e.preventDefault();
+    if(email === "demo@member.com" && pass === "1128"){ setRole("member"); setErr(""); }
+    else if(email === "demo@staff.com" && pass === "1128"){ setRole("staff"); setErr(""); }
+    else { setErr("Invalid credentials. Try demo@member.com or demo@staff.com (pass: 1128)"); }
+  }
+
+  return (
+    <section className="py-16">
+      <div className="max-w-md mx-auto px-4 md:px-6 lg:px-8 rounded-2xl border p-6 bg-neutral-50">
+        <h2 className="text-xl font-bold">Sign in ({target})</h2>
+        <p className="text-sm text-neutral-600 mt-1">Demo access for preview. Swap for real auth later.</p>
+        <form onSubmit={submit} className="mt-4 space-y-3">
+          <div>
+            <label className="text-sm">Email</label>
+            <input value={email} onChange={e=>setEmail(e.target.value)} className="mt-1 w-full rounded-xl border px-3 py-2" placeholder="demo@member.com" />
+          </div>
+          <div>
+            <label className="text-sm">Password</label>
+            <input type="password" value={pass} onChange={e=>setPass(e.target.value)} className="mt-1 w-full rounded-xl border px-3 py-2" placeholder="1128" />
+          </div>
+          {err && <p className="text-xs text-red-600">{err}</p>}
+          <button className="w-full rounded-xl bg-neutral-900 text-white py-2 font-semibold">Sign in</button>
+          <div className="text-xs text-neutral-500">Member: demo@member.com / 1128 &nbsp; | &nbsp; Staff: demo@staff.com / 1128</div>
+        </form>
+      </div>
+    </section>
+  );
+}
+
+function PublicPreview(){
+  return (
+    <main>
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 grid lg:grid-cols-2 gap-8 items-center">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Business 2 Business Network</h1>
+            <p className="mt-4 text-lg text-neutral-600">A simple service program that gets businesses properly structured, operationally ready, and prepared for potential financing opportunities with lenders.</p>
+            <div className="mt-6 flex gap-3">
+              <a href="#join" className="px-5 py-3 rounded-2xl bg-neutral-900 text-white font-semibold">Join the Program</a>
+              <a href="#how" className="px-5 py-3 rounded-2xl border font-semibold">How it works</a>
+            </div>
+          </div>
+          <div className="rounded-3xl border p-6 bg-neutral-50">
+            <ProgramDiagram />
+          </div>
+        </div>
+      </section>
+
+      <section id="how" className="py-14 border-t">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <h2 className="text-3xl font-extrabold tracking-tight">How the Program Works</h2>
+          <div className="mt-6 grid md:grid-cols-3 gap-6">
+            <Step n={1} title="Business Setup" body="We assist with entity formation or verification, EIN, address, website, phone, and banking setup." />
+            <Step n={2} title="Service Credits & Readiness" body="Members add service credits that cover setup, documentation, compliance reviews, and operational readiness support. Credits can be added anytime." />
+            <Step n={3} title="Readiness Milestone" body="When docs and readiness checks are complete, we may introduce you to lenders for potential financing options." />
+          </div>
+        </div>
+      </section>
+
+      <section id="join" className="py-14">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 lg:px-8 rounded-3xl border p-6 bg-neutral-50">
+          <h3 className="text-2xl font-bold">Join the Program</h3>
+          <p className="text-neutral-600 mt-1">Tell us about your business; we will review and follow up with next steps.</p>
+          <form onSubmit={(e)=>e.preventDefault()} className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <Input label="Full name" placeholder="First Last" />
+            <Input label="Email" type="email" placeholder="you@business.com" />
+            <Input label="Phone" placeholder="(###) ###-####" />
+            <Input label="Business name" placeholder="Company LLC" />
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium">Your goals (next 60-90 days)</label>
+              <textarea className="mt-1 w-full rounded-xl border px-3 py-2" rows={3} placeholder="Business setup, documentation, operational readiness, funding preparation"></textarea>
+            </div>
+            <div className="md:col-span-2 flex items-center justify-between">
+              <label className="text-sm"><input type="checkbox" className="mr-2" /> I agree to the Terms & Privacy</label>
+              <button className="px-5 py-2.5 rounded-xl bg-neutral-900 text-white font-semibold">Submit</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="faq" className="py-14 border-t">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <h2 className="text-3xl font-extrabold tracking-tight">Frequently Asked Questions</h2>
+          <div className="mt-4 grid md:grid-cols-2 gap-6 text-sm">
+            <Card title="Is this a loan or funding program?">
+              <p>No. We are not a lender. We provide setup, readiness consulting, and documentation support. If a member qualifies, we may introduce them to lenders.</p>
+            </Card>
+            <Card title="How do service credits work?">
+              <p>Members add credits as needed to cover services. Credits are not deposits or investments and carry no return; they pay for professional work only.</p>
+            </Card>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function MemberPreview(){
+  return (
+    <main>
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Member Portal - Preview</h1>
+          <p className="text-neutral-600 mt-2">Light-mode dashboard showing service credits, documentation progress, and readiness status.</p>
+
+          <div className="mt-8 grid lg:grid-cols-4 gap-6">
+            <KPI title="Service Credits" value="$1,500" note="Recent add: $250" />
+            <KPI title="Readiness" value="IN REVIEW" note="Docs under evaluation" />
+            <KPI title="Documentation" value="75%" note="Almost complete" />
+            <KPI title="Next Review" value="Scheduled" note="Within 3-5 business days" />
+          </div>
+
+          <div className="mt-6 grid lg:grid-cols-3 gap-6">
+            <Card title="Documentation Checklist">
+              <ul className="text-sm list-disc pl-5 space-y-1">
+                <li>Entity / EIN docs - OK</li>
+                <li>Business banking - OK</li>
+                <li>Payment processor setup - OK</li>
+                <li>Financial statements - Pending</li>
+              </ul>
+            </Card>
+            <Card title="Add Service Credits">
+              <form onSubmit={(e)=>e.preventDefault()} className="text-sm space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <input className="rounded-xl border px-3 py-2" placeholder="$ Amount" />
+                  <select className="rounded-xl border px-3 py-2"><option>One-time</option><option>Weekly</option><option>Monthly</option></select>
+                </div>
+                <button className="w-full rounded-xl bg-neutral-900 text-white py-2 font-semibold">Add Credits</button>
+                <p className="text-xs text-neutral-500">Credits support ongoing setup and readiness work.</p>
+              </form>
+            </Card>
+            <Card title="Activity Log">
+              <ul className="text-sm space-y-1">
+                <li>Added $250 credits (today)</li>
+                <li>Docs reviewed (yesterday)</li>
+                <li>Website placeholder created (Mon)</li>
+              </ul>
+            </Card>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function StaffPanel(){
+  const [tab, setTab] = useState("intake");
+  const [members, setMembers] = useState([{
+    id:"M-0001", business:"Delta Goods LLC", owner:"Alex Green", email:"owner@delta.com", phone:"(555) 111-2222", state:"MS", status:"INTAKE", readiness:45
+  },{
+    id:"M-0002", business:"Ricks Express", owner:"Rick Jones", email:"rick@express.com", phone:"(555) 333-4444", state:"MS", status:"REVIEW", readiness:72
+  }]);
+  const [tasks, setTasks] = useState([
+    {id:1, member:"M-0001", task:"File LLC with State", owner:"1128 Staff", due:"", status:"TODO"},
+    {id:2, member:"M-0001", task:"Open Business Bank", owner:"Member", due:"", status:"TODO"},
+    {id:3, member:"M-0002", task:"Configure Stripe Settings", owner:"1128 Staff", due:"", status:"DOING"},
+  ]);
+  const [docs, setDocs] = useState([
+    {id:1, member:"M-0001", name:"Entity Docs", status:"OK"},
+    {id:2, member:"M-0001", name:"EIN Letter", status:"OK"},
+    {id:3, member:"M-0001", name:"Bank Statements (3 mo)", status:"PENDING"},
+    {id:4, member:"M-0002", name:"Processor Reports", status:"OK"},
+  ]);
+  const [credits, setCredits] = useState([
+    {id:1, member:"M-0001", date:"2025-11-01", type:"add", amount:500, note:"Initial"},
+    {id:2, member:"M-0001", date:"2025-11-06", type:"add", amount:250, note:"Top-up"},
+    {id:3, member:"M-0002", date:"2025-11-02", type:"add", amount:700, note:"Onboarding"},
+  ]);
+
+  const memberIndex = useMemo(()=> Object.fromEntries(members.map(m=>[m.id, m])), [members]);
+
+  function addTask(newTask){ setTasks(prev=>[...prev,{ id: Date.now(), ...newTask }]); }
+  function updateTask(id, patch){ setTasks(prev=> prev.map(t=> t.id===id? {...t, ...patch}: t)); }
+  function addMember(newMember){ setMembers(prev=>[...prev, newMember]); }
+  function updateMember(id, patch){ setMembers(prev => prev.map(m => m.id===id? {...m, ...patch} : m)); }
+  function upsertDoc(row){ setDocs(prev=>{ const i = prev.findIndex(d=>d.id===row.id); if(i>-1){ const copy=[...prev]; copy[i]=row; return copy;} return [...prev,{...row, id: Date.now()}]; }); }
+  function addCredit(row){ setCredits(prev=>[...prev,{ id: Date.now(), ...row }]); }
+
+  return (
+    <main>
+      <section className="py-4 border-b">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="flex flex-wrap gap-2">
+            {['intake','members','tasks','docs','credits','reviews'].map(t=> (
+              <button key={t} onClick={()=>setTab(t)} className={`px-3 py-1.5 rounded-lg border text-sm ${tab===t? 'bg-neutral-900 text-white' : 'bg-white'}`}>{t.toUpperCase()}</button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-10">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          {tab==='intake' && <IntakePane onAdd={addMember} />}
+          {tab==='members' && <MembersPane rows={members} onUpdate={updateMember} />}
+          {tab==='tasks' && <TasksPane rows={tasks} onAdd={addTask} onUpdate={updateTask} />}
+          {tab==='docs' && <DocsPane rows={docs} members={memberIndex} onUpsert={upsertDoc} />}
+          {tab==='credits' && <CreditsPane rows={credits} onAdd={addCredit} members={memberIndex} />}
+          {tab==='reviews' && <ReviewsPane members={members} docs={docs} />}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function IntakePane({onAdd}){
+  const [id,setId]=React.useState("M-0003");
+  const [business,setBusiness]=React.useState("");
+  const [owner,setOwner]=React.useState("");
+  const [email,setEmail]=React.useState("");
+  const [phone,setPhone]=React.useState("");
+  const [state,setState]=React.useState("MS");
+  function submit(e){ e.preventDefault(); onAdd({id,business,owner,email,phone,state,status:"INTAKE",readiness:0}); setBusiness(""); setOwner(""); setEmail(""); setPhone(""); setId("M-"+Math.floor(Math.random()*9000+1000)); }
+  return (
+    <Card title="New Client Intake">
+      <form onSubmit={submit} className="grid md:grid-cols-3 gap-3 text-sm">
+        <input value={id} onChange={e=>setId(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="ID" />
+        <input value={business} onChange={e=>setBusiness(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="Business name" />
+        <input value={owner} onChange={e=>setOwner(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="Owner" />
+        <input value={email} onChange={e=>setEmail(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="Email" />
+        <input value={phone} onChange={e=>setPhone(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="Phone" />
+        <input value={state} onChange={e=>setState(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="State" />
+        <div className="md:col-span-3"><button className="px-4 py-2 rounded-xl bg-neutral-900 text-white">Add Client</button></div>
+      </form>
+    </Card>
+  );
+}
+
+function MembersPane({rows,onUpdate}){
+  return (
+    <Card title="Members">
+      <div className="overflow-auto">
+        <table className="w-full text-sm">
+          <thead className="text-left text-neutral-500">
+            <tr><th className="py-2">ID</th><th>Business</th><th>Owner</th><th>Status</th><th>Readiness %</th></tr>
+          </thead>
+          <tbody>
+            {rows.map(r=> (
+              <tr key={r.id} className="border-t">
+                <td className="py-2 pr-3">{r.id}</td>
+                <td className="pr-3">{r.business}</td>
+                <td className="pr-3">{r.owner}</td>
+                <td className="pr-3">
+                  <select value={r.status} onChange={e=>onUpdate(r.id,{status:e.target.value})} className="rounded-lg border px-2 py-1">
+                    <option>INTAKE</option><option>REVIEW</option><option>READY</option><option>INTRO</option><option>FUNDED</option>
+                  </select>
+                </td>
+                <td>
+                  <input type="number" value={r.readiness} onChange={e=>onUpdate(r.id,{readiness: Number(e.target.value)})} className="w-20 rounded-lg border px-2 py-1" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
+
+function TasksPane({rows,onAdd,onUpdate}){
+  const [member,setMember]=React.useState("M-0001");
+  const [task,setTask]=React.useState("");
+  const [owner,setOwner]=React.useState("1128 Staff");
+  function submit(e){ e.preventDefault(); if(!task) return; onAdd({member, task, owner, due:"", status:"TODO"}); setTask(""); }
+  return (
+    <div className="grid lg:grid-cols-2 gap-6">
+      <Card title="Tasks">
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-neutral-500"><tr><th className="py-2">Member</th><th>Task</th><th>Owner</th><th>Status</th></tr></thead>
+            <tbody>
+              {rows.map(r=> (
+                <tr key={r.id} className="border-t">
+                  <td className="py-2 pr-3">{r.member}</td>
+                  <td className="pr-3">{r.task}</td>
+                  <td className="pr-3">{r.owner}</td>
+                  <td>
+                    <select value={r.status} onChange={e=>onUpdate(r.id,{status:e.target.value})} className="rounded-lg border px-2 py-1">
+                      <option>TODO</option><option>DOING</option><option>DONE</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+      <Card title="Add Task">
+        <form onSubmit={submit} className="grid md:grid-cols-2 gap-3 text-sm">
+          <input value={member} onChange={e=>setMember(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="Member ID" />
+          <input value={owner} onChange={e=>setOwner(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="Owner" />
+          <div className="md:col-span-2"><input value={task} onChange={e=>setTask(e.target.value)} className="rounded-xl border px-3 py-2 w-full" placeholder="Task" /></div>
+          <div className="md:col-span-2"><button className="px-4 py-2 rounded-xl bg-neutral-900 text-white">Add</button></div>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+function DocsPane({rows, members, onUpsert}){
+  const [member,setMember]=React.useState("M-0001");
+  const [name,setName]=React.useState("");
+  const [status,setStatus]=React.useState("PENDING");
+  function submit(e){ e.preventDefault(); if(!name) return; onUpsert({ member, name, status }); setName(""); setStatus("PENDING"); }
+  return (
+    <div className="grid lg:grid-cols-2 gap-6">
+      <Card title="Documents">
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-neutral-500"><tr><th className="py-2">Member</th><th>Document</th><th>Status</th></tr></thead>
+            <tbody>
+              {rows.map(r=> (
+                <tr key={r.id} className="border-t">
+                  <td className="py-2 pr-3">{r.member}</td>
+                  <td className="pr-3">{r.name}</td>
+                  <td className="pr-3">{r.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+      <Card title="Add / Update Document">
+        <form onSubmit={submit} className="grid md:grid-cols-2 gap-3 text-sm">
+          <input value={member} onChange={e=>setMember(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="Member ID" />
+          <select value={status} onChange={e=>setStatus(e.target.value)} className="rounded-xl border px-3 py-2"><option>PENDING</option><option>OK</option></select>
+          <div className="md:col-span-2"><input value={name} onChange={e=>setName(e.target.value)} className="rounded-xl border px-3 py-2 w-full" placeholder="Document name" /></div>
+          <div className="md:col-span-2"><button className="px-4 py-2 rounded-xl bg-neutral-900 text-white">Save</button></div>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+function CreditsPane({rows, onAdd, members}){
+  const [member,setMember]=React.useState("M-0001");
+  const [amount,setAmount]=React.useState("");
+  const [type,setType]=React.useState("add");
+  const [note,setNote]=React.useState("");
+  function submit(e){ e.preventDefault(); if(!amount) return; onAdd({ member, date: new Date().toISOString().slice(0,10), type, amount: Number(amount), note }); setAmount(""); setNote(""); }
+  const totalByMember = React.useMemo(()=>{
+    const sums={};
+    rows.forEach(r=>{ const s = (sums[r.member]||0) + (r.type==='add'? r.amount : -r.amount); sums[r.member]=s; });
+    return sums;
+  },[rows]);
+  return (
+    <div className="grid lg:grid-cols-2 gap-6">
+      <Card title="Credits Ledger">
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-neutral-500"><tr><th className="py-2">Date</th><th>Member</th><th>Type</th><th>Amount</th><th>Note</th></tr></thead>
+            <tbody>
+              {rows.map(r=> (
+                <tr key={r.id} className="border-t">
+                  <td className="py-2 pr-3">{r.date}</td>
+                  <td className="pr-3">{r.member}</td>
+                  <td className="pr-3">{r.type}</td>
+                  <td className="pr-3">${r.amount}</td>
+                  <td className="pr-3">{r.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+      <Card title="Add Credit Entry">
+        <form onSubmit={submit} className="grid md:grid-cols-2 gap-3 text-sm">
+          <input value={member} onChange={e=>setMember(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="Member ID" />
+          <select value={type} onChange={e=>setType(e.target.value)} className="rounded-xl border px-3 py-2"><option value="add">add</option><option value="spend">spend</option></select>
+          <input value={amount} onChange={e=>setAmount(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="Amount" />
+          <input value={note} onChange={e=>setNote(e.target.value)} className="rounded-xl border px-3 py-2" placeholder="Note" />
+          <div className="md:col-span-2"><button className="px-4 py-2 rounded-xl bg-neutral-900 text-white">Add</button></div>
+        </form>
+        <div className="mt-4 rounded-xl border p-3 text-xs text-neutral-600">
+          <p className="font-semibold mb-1">Totals by Member</p>
+          <ul className="grid grid-cols-2 gap-2">
+            {Object.keys(totalByMember).map(k=> (
+              <li key={k} className="rounded-lg border px-2 py-1">{k}: ${totalByMember[k]}</li>
+            ))}
+          </ul>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function ReviewsPane({members, docs}){
+  const rows = members.map(m => {
+    const hasEntity = docs.find(d=>d.member===m.id && d.name.toLowerCase().includes("entity") && d.status==="OK");
+    const hasProcessor = docs.find(d=>d.member===m.id && d.name.toLowerCase().includes("processor") && d.status==="OK");
+    const ready = m.readiness>=70 && hasEntity && hasProcessor;
+    return {...m, gate: ready? "READY" : "IN REVIEW"};
+  });
+  return (
+    <Card title="Readiness Reviews">
+      <div className="overflow-auto">
+        <table className="w-full text-sm">
+          <thead className="text-left text-neutral-500"><tr><th className="py-2">Member</th><th>Status</th><th>Readiness %</th><th>Gate</th></tr></thead>
+          <tbody>
+            {rows.map(r=> (
+              <tr key={r.id} className="border-t">
+                <td className="py-2 pr-3">{r.id} - {r.business}</td>
+                <td className="pr-3">{r.status}</td>
+                <td className="pr-3">{r.readiness}%</td>
+                <td className={`pr-3 ${r.gate==='READY' ? 'text-green-700' : 'text-amber-700'}`}>{r.gate}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-neutral-500 mt-3">Rules are for demo only. Replace with your underwriting-friendly criteria.</p>
+    </Card>
+  );
+}
+
+function ProgramDiagram(){
+  return (
+    <div>
+      <h3 className="font-semibold">Program Overview</h3>
+      <p className="text-sm text-neutral-600 mb-3">1) Setup  2) Service Credits  3) Readiness</p>
+      <svg viewBox="0 0 600 220" className="w-full h-auto">
+        <circle cx="120" cy="110" r="34" stroke="#111" fill="#fff"></circle>
+        <text x="120" y="180" textAnchor="middle" fontSize="12">Setup</text>
+        <circle cx="300" cy="60" r="34" stroke="#111" fill="#fff"></circle>
+        <text x="300" y="130" textAnchor="middle" fontSize="12">Service Credits</text>
+        <circle cx="500" cy="110" r="34" stroke="#111" fill="#fff"></circle>
+        <text x="500" y="180" textAnchor="middle" fontSize="12">Readiness</text>
+        <line x1="154" y1="100" x2="266" y2="70" stroke="#111" strokeWidth="2"></line>
+        <line x1="334" y1="70" x2="466" y2="100" stroke="#111" strokeWidth="2"></line>
+        <text x="300" y="20" textAnchor="middle" fontSize="11">Credits can be added anytime</text>
+        <line x1="240" y1="30" x2="360" y2="30" stroke="#111"></line>
+      </svg>
+    </div>
+  );
+}
+
+function Step({ n, title, body }){
+  return (
+    <div className="rounded-2xl border p-5 bg-white">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold">{title}</h3>
+        <span className="text-xs px-2 py-1 rounded bg-neutral-100">{n}</span>
+      </div>
+      <p className="mt-2 text-neutral-600 text-sm">{body}</p>
+    </div>
+  );
+}
+
+function KPI({ title, value, note }){
+  return (
+    <div className="rounded-2xl border p-4 bg-white">
+      <p className="text-xs uppercase tracking-wide text-neutral-500">{title}</p>
+      <p className="mt-2 text-2xl font-extrabold">{value}</p>
+      <p className="text-xs text-neutral-600 mt-1">{note}</p>
+    </div>
+  );
+}
+
+function Card({ title, children }){
+  return (
+    <div className="rounded-2xl border p-5 bg-white">
+      <h3 className="font-semibold">{title}</h3>
+      <div className="mt-2">{children}</div>
+    </div>
+  );
+}
+
+function Input({ label, placeholder, type }){
+  return (
+    <div>
+      <label className="text-sm font-medium">{label}</label>
+      <input type={type || "text"} className="mt-1 w-full rounded-xl border px-3 py-2" placeholder={placeholder} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<B2BWebsite/>);

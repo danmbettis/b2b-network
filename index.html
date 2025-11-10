@@ -1,21 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>B2B Network — Setup, Readiness, Support</title>
-  <!-- Tailwind (CDN) -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>B2B Network</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- React 18 (UMD) + Babel for JSX in the browser -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; }
-  </style>
 </head>
 <body class="bg-white">
-  <div id="root"></div>
-  <script type="text/babel" data-type="module" src="./app.jsx"></script>
+  <div id="root">Loading…</div>
+
+  <script type="text/babel">
+  // ===== CONFIG — PUT YOUR VALUES HERE =====
+  const API = {
+    base: "https://script.google.com/macros/s/AKfycbwh-KZj_M_lEb0RJ29KlcQRQ_ugTGUGAOpYpEZvFQhaPvQ2AtHWrDa9JlzHneg0XV5_/exec",
+    key:  "B2B_CYCLE",
+  };
+  // ========================================
+
+  async function apiGet(entity){
+    const res = await fetch(`${API.base}?entity=${entity}&key=${API.key}`);
+    return res.json();
+  }
+  async function apiPost(entity, row){
+    const res = await fetch(`${API.base}?entity=${entity}&key=${API.key}`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(row)
+    });
+    return res.json();
+  }
+
+  function App(){
+    const [message,setMessage]=React.useState("");
+
+    async function submitJoin(e){
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const row = {
+        business: f.get('business'),
+        owner:    f.get('owner'),
+        email:    f.get('email'),
+        phone:    f.get('phone'),
+        state:    f.get('state'),
+      };
+      const out = await apiPost('members', row);
+      if(out.ok){ setMessage("✅ Submitted! We'll follow up by email."); e.target.reset(); }
+      else      { setMessage("❌ Failed: " + (out.error||"unknown")); }
+    }
+
+    return (
+      <main className="min-h-screen bg-white text-neutral-900">
+        <header className="border-b">
+          <div className="max-w-5xl mx-auto p-4 flex justify-between">
+            <div className="font-bold">B2B Network</div>
+            <a className="text-sm underline" href="#staff">Staff</a>
+          </div>
+        </header>
+
+        <section className="max-w-5xl mx-auto p-6">
+          <h1 className="text-3xl font-extrabold">Join the Program</h1>
+          <p className="text-neutral-600 mt-1">Setup → Service Credits → Readiness → Lender introductions (if eligible).</p>
+
+          <form onSubmit={submitJoin} className="mt-6 grid md:grid-cols-2 gap-4">
+            <input name="business" className="border rounded-xl px-3 py-2" placeholder="Business name" required />
+            <input name="owner"    className="border rounded-xl px-3 py-2" placeholder="Owner" required />
+            <input name="email"    className="border rounded-xl px-3 py-2" placeholder="Email" type="email" required />
+            <input name="phone"    className="border rounded-xl px-3 py-2" placeholder="Phone" />
+            <input name="state"    className="border rounded-xl px-3 py-2" placeholder="State (e.g., MS)" />
+            <div className="md:col-span-2">
+              <button className="px-5 py-2 rounded-xl bg-neutral-900 text-white">Submit</button>
+            </div>
+          </form>
+
+          {message && <p className="mt-3 text-sm">{message}</p>}
+        </section>
+
+        <section id="staff" className="max-w-5xl mx-auto p-6 border-t">
+          <h2 className="text-xl font-bold">Staff Tools (live)</h2>
+          <div className="mt-3 flex gap-2">
+            <button className="px-3 py-2 border rounded" onClick={async()=>{
+              await apiPost('members', {id:'M-0001',business:'Delta Goods LLC',owner:'Alex Green',email:'owner@delta.com',state:'MS',status:'INTAKE',readiness:45});
+              await apiPost('members', {id:'M-0002',business:'Ricks Express',owner:'Rick Jones',email:'rick@express.com',state:'MS',status:'REVIEW',readiness:72});
+              alert('Seeded two members. Refresh Members read below.');
+            }}>Seed demo members</button>
+
+            <button className="px-3 py-2 border rounded" onClick={async()=>{
+              const res = await apiGet('members');
+              alert('Members JSON in console'); console.log(res);
+            }}>Read Members</button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App/>);
+  </script>
 </body>
 </html>

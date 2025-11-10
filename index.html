@@ -24,12 +24,16 @@
     const res = await fetch(`${API.base}?entity=${entity}&key=${API.key}`);
     return res.json();
   }
-  async function apiPost(entity, row){
-    const res = await fetch(`${API.base}?entity=${entity}&key=${API.key}`, {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(row)
-    });
-    return res.json();
-  }
+  async function apiPost(entity, rowObj) {
+  const url = `${API.base}?entity=${entity}&key=${API.key}`;
+  const res = await fetch(url, {
+    method: "POST",
+    // IMPORTANT: no custom headers -> browser uses text/plain; no preflight
+    body: JSON.stringify(rowObj),
+  });
+  return res.json();
+}
+
 
   function App(){
     const [message,setMessage]=React.useState("");
